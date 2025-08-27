@@ -1,3 +1,4 @@
+# ==== AURA_V2/requirements.txt ====
 Flask
 Flask-SQLAlchemy
 Flask-Login
@@ -6,3 +7,10 @@ Flask-WTF
 python-dotenv
 requests
 email-validator
+pandas
+matplotlib
+seaborn
+
+# Novas bibliotecas para gerar PDFs
+xhtml2pdf
+PyPDF2

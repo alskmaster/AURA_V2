@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block app_content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+        <h1 class="h2">Dashboard: {{ client.name }}</h1>
+        <div class="btn-toolbar mb-2 mb-md-0">
+            <a href="{{ url_for('main.analytics_studio') }}" class="btn btn-primary me-2">
+                Ir para o Analytics Studio
+            </a>
+            <a href="{{ url_for('main.index') }}" class="btn btn-sm btn-outline-secondary">
+                Trocar Cliente
+            </a>
+        </div>
+    </div>
+
+    <div class="text-center p-5 bg-white rounded shadow-sm">
+        <h4>Dashboard do Cliente</h4>
+        <p>Esta área conterá os principais KPIs e atalhos para os relatórios deste cliente.</p>
+        <p class="mt-4">Na próxima fase, ativaremos o Analytics Studio a partir daqui.</p>
+    </div>
+</div>
+{% endblock %}
