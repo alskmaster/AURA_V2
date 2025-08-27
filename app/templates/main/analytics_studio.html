@@ -34,7 +34,6 @@
                     </div>
                 </div>
             </div>
-
             <div class="col-lg-8">
                  <div class="card shadow-sm h-100">
                     <div class="card-header"><h5 class="mb-0">2. Seleção de Hosts (Escopo)</h5></div>
@@ -61,8 +60,18 @@
             <div class="col-12">
                 <div class="card shadow-sm">
                     <div class="card-header"><h5 class="mb-0">3. Módulos do Relatório</h5></div>
-                    <div class="card-body" style="min-height: 200px;">
-                        <p class="text-muted" id="modules-helper-text">Selecione os hosts acima para ver os módulos de análise.</p>
+                    <div class="card-body">
+                        <p class="text-muted" id="modules-helper-text">Selecione os hosts acima para ver e escolher os módulos de análise.</p>
+                        
+                        <div id="available-modules-container" class="row g-3">
+                        </div>
+
+                        <hr class="my-4">
+
+                        <h6>Layout Final do Relatório (arraste para ordenar)</h6>
+                        <ul id="report-layout" class="list-group" style="min-height: 100px; background-color: #f8f9fa;">
+                        </ul>
+                        <input type="hidden" name="report_layout_order" id="report_layout_order">
                     </div>
                 </div>
             </div>
@@ -75,7 +84,26 @@
         </div>
     </form>
 </div>
-
+<div class="modal fade" id="moduleConfigModal" tabindex="-1" aria-labelledby="moduleConfigModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="moduleConfigModalLabel">Configurar Módulo</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p>As opções de configuração para este módulo aparecerão aqui.</p>
+        <div id="modal-form-content"></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-primary" id="saveModuleConfigBtn">Guardar Alterações</button>
+      </div>
+    </div>
+  </div>
+</div>
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
 <script src="{{ url_for('static', filename='js/studio.js') }}"></script>
+<script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 {% endblock %}

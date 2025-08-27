@@ -23,9 +23,10 @@ class BaseCollector(ABC):
             self.start_time = None
             self.end_time = None
 
-    def collect(self):
+    def collect(self, instance_config=None):
         try:
-            data = self.fetch_data()
+            # Passa a configuração da instância para o fetch_data
+            data = self.fetch_data(instance_config)
             if data is None: return None
             return data
         except Exception as e:
@@ -38,7 +39,7 @@ class BaseCollector(ABC):
         pass
 
     @abstractmethod
-    def fetch_data(self):
+    def fetch_data(self, instance_config):
         pass
 
     # --- FUNÇÕES DE AJUDA RESTAURADAS ---

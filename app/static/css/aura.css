@@ -1,0 +1,61 @@
+/* ==== AURA_V2/app/static/css/aura.css ==== */
+
+/* ... (todo o CSS existente permanece aqui) ... */
+
+/* --- Estilos para os Cards de Módulo Selecionáveis --- */
+.module-card {
+    border: 2px solid var(--border-color);
+    border-radius: var(--border-radius);
+    padding: 1.5rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+    background-color: var(--surface-color);
+    position: relative; /* Para o ícone de check */
+}
+
+.module-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-md);
+    border-color: var(--primary-color);
+}
+
+.module-card.selected {
+    border-color: var(--primary-color);
+    background-color: #eef2ff; /* Um fundo levemente roxo/azulado */
+    box-shadow: var(--shadow-md);
+}
+
+.module-card.selected::after {
+    content: '✔';
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    color: var(--primary-color);
+    font-size: 1.2rem;
+    font-weight: bold;
+}
+
+.module-card h6 {
+    font-weight: 700;
+    color: var(--secondary-color);
+    margin-top: 1rem;
+    font-size: 0.9rem;
+}
+
+.module-card .icon {
+    font-size: 2.5rem;
+    color: var(--primary-color);
+}
+
+.module-card.disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+    background-color: var(--light-gray);
+}
+
+.module-card.disabled:hover {
+    transform: none;
+    box-shadow: none;
+    border-color: var(--border-color);
+}
