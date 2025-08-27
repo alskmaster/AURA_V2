@@ -1,0 +1,37 @@
+{% extends "admin/base.html" %}
+
+{% block admin_content %}
+<div class="p-3 bg-white rounded shadow-sm">
+    <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-3">
+        <div>
+            <h2 class="mb-0">{{ title }}</h2>
+            <p class="text-muted mb-0">Para o Cliente: {{ client.name }}</p>
+        </div>
+    </div>
+    <form method="POST" novalidate>
+        {{ form.hidden_tag() }}
+        
+        <div class="mb-3">
+            {{ form.platform.label(class="form-label") }}
+            {{ form.platform(class="form-select") }}
+        </div>
+
+        <div class="mb-3">
+            {{ form.credentials_json.label(class="form-label") }}
+            {{ form.credentials_json(class="form-control font-monospace", rows="10") }}
+            <small class="form-text text-muted">
+                Insira as credenciais no formato JSON. <br>
+                <b>Opção 1 (Login/Senha):</b> 
+                <code>{"url": "...", "user": "...", "password": "..."}</code> <br>
+                <b>Opção 2 (Token):</b> 
+                <code>{"url": "...", "token": "seu_token_de_api_aqui"}</code>
+            </small>
+        </div>
+        
+        <div class="mt-4">
+            {{ form.submit(class="btn btn-primary") }}
+            <a href="{{ url_for('admin.list_datasources', client_id=client.id) }}" class="btn btn-secondary">Cancelar</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

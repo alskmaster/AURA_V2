@@ -1,0 +1,47 @@
+{% extends "admin/base.html" %}
+
+{% block admin_content %}
+<div class="p-3 bg-white rounded shadow-sm">
+    <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-3">
+        <div>
+            <h2 class="mb-0">Fontes de Dados</h2>
+            <p class="text-muted mb-0">Cliente: {{ client.name }}</p>
+        </div>
+        <div>
+            <a href="{{ url_for('admin.add_datasource', client_id=client.id) }}" class="btn btn-primary">Adicionar Fonte de Dados</a>
+            <a href="{{ url_for('admin.list_clients') }}" class="btn btn-secondary">Voltar aos Clientes</a>
+        </div>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-striped table-hover">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Plataforma</th>
+                    <th>Credenciais (JSON)</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for datasource in client.data_sources %}
+                <tr>
+                    <td>{{ datasource.id }}</td>
+                    <td><span class="badge bg-info text-dark">{{ datasource.platform }}</span></td>
+                    <td><pre class="mb-0" style="white-space: pre-wrap; word-break: break-all; max-width: 400px;"><code>{{ datasource.credentials_json }}</code></pre></td>
+                    <td>
+                        <a href="{{ url_for('admin.edit_datasource', datasource_id=datasource.id) }}" class="btn btn-sm btn-outline-primary">Editar</a>
+                        <form action="{{ url_for('admin.delete_datasource', datasource_id=datasource.id) }}" method="POST" style="display:inline;" onsubmit="return confirm('Tem a certeza que deseja apagar esta fonte de dados?');">
+                            <input type="submit" value="Apagar" class="btn btn-sm btn-outline-danger">
+                        </form>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="4" class="text-center">Nenhuma fonte de dados encontrada para este cliente.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block app_content %}
+<div class="row">
+    <div class="col-md-3">
+        <div class="d-flex flex-column flex-shrink-0 p-3 bg-white rounded shadow-sm h-100">
+            <h4 class="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-dark">
+                Admin Panel
+            </h4>
+            <hr>
+            <ul class="nav nav-pills flex-column mb-auto">
+                <li class="nav-item">
+                    <a href="{{ url_for('admin.dashboard') }}" class="nav-link {% if 'dashboard' in request.path %}active{% else %}text-dark{% endif %}">
+                        Dashboard
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ url_for('admin.list_clients') }}" class="nav-link {% if 'client' in request.path %}active{% else %}text-dark{% endif %}">
+                        Clientes
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ url_for('admin.list_users') }}" class="nav-link {% if 'user' in request.path %}active{% else %}text-dark{% endif %}">
+                        Utilizadores
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="col-md-9">
+        {% block admin_content %}{% endblock %}
+    </div>
+</div>
+{% endblock %}

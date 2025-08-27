@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+
+{% block app_content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+        <h1 class="h2">Analytics Studio: {{ client.name }}</h1>
+        <a href="{{ url_for('main.client_dashboard', client_id=client.id) }}" class="btn btn-sm btn-outline-secondary">
+            Voltar ao Dashboard
+        </a>
+    </div>
+
+    <form method="POST" action="#">
+        {{ form.hidden_tag() }}
+        
+        <div class="row g-4">
+            <div class="col-lg-4">
+                 <div class="card shadow-sm h-100">
+                    <div class="card-header"><h5 class="mb-0">1. Configurações Gerais</h5></div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            {{ form.report_name.label(class="form-label") }}
+                            {{ form.report_name(class="form-control") }}
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                {{ form.start_date.label(class="form-label") }}
+                                {{ form.start_date(class="form-control", type="date") }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                {{ form.end_date.label(class="form-label") }}
+                                {{ form.end_date(class="form-control", type="date") }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-8">
+                 <div class="card shadow-sm h-100">
+                    <div class="card-header"><h5 class="mb-0">2. Seleção de Hosts (Escopo)</h5></div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                {{ form.host_groups.label(class="form-label") }}
+                                {{ form.host_groups(class="form-select", size=8, multiple=True, id="host_groups") }}
+                            </div>
+                            <div class="col-md-6">
+                                {{ form.hosts.label(class="form-label") }}
+                                <div id="hosts-container" class="border rounded p-2 bg-light" style="height: 210px; overflow-y: auto;">
+                                    <small class="text-muted">Selecione um grupo para ver os hosts.</small>
+                                </div>
+                                {{ form.hosts(class="d-none", multiple=True, id="hosts") }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card shadow-sm">
+                    <div class="card-header"><h5 class="mb-0">3. Módulos do Relatório</h5></div>
+                    <div class="card-body" style="min-height: 200px;">
+                        <p class="text-muted" id="modules-helper-text">Selecione os hosts acima para ver os módulos de análise.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="sticky-bottom bg-light p-3 mt-4 border-top">
+            <div class="d-flex justify-content-end">
+                {{ form.submit(class="btn btn-primary btn-lg") }}
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}
