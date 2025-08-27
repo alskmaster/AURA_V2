@@ -1,4 +1,4 @@
-# ==== AURA_V2/app/collectors/base_collector.py ====
+# ==== AURA_V2/app/collectors/base_collector.py (VERSÃO FINAL E COMPLETA) ====
 
 from abc import ABC, abstractmethod
 import time
@@ -40,3 +40,30 @@ class BaseCollector(ABC):
     @abstractmethod
     def fetch_data(self):
         pass
+
+    # --- FUNÇÕES DE AJUDA RESTAURADAS ---
+    def _get_items_by_key(self, key_pattern, host_ids=None):
+        """Função de ajuda para buscar itens com base num padrão de chave."""
+        active_host_ids = host_ids if host_ids is not None else self.host_ids
+        if not active_host_ids:
+            return []
+        return self.service.get('item.get', {
+            'output': ['itemid', 'name', 'hostid'],
+            'hostids': active_host_ids,
+            'search': {'key_': key_pattern},
+            'searchByAny': True
+        })
+
+    def _get_history(self, item_ids, history_type):
+        """Função de ajuda para buscar o histórico de itens."""
+        if not self.start_time or not self.end_time:
+            raise ValueError("Período (data de início/fim) não foi definido para buscar o histórico.")
+        return self.service.get('history.get', {
+            'output': 'extend',
+            'history': history_type,
+            'itemids': item_ids,
+            'time_from': self.start_time,
+            'time_till': self.end_time,
+            'sortfield': 'clock',
+            'sortorder': 'ASC'
+        })

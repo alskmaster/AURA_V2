@@ -1,8 +1,8 @@
-# ==== AURA_V2/app/main/routes.py (VERSÃO FINAL FASE 3) ====
+# ==== AURA_V2/app/main/routes.py (VERSÃO FINAL E CORRIGIDA) ====
 
 from flask import render_template, redirect, url_for, session, flash, jsonify, request, current_app, send_file
 from flask_login import login_required, current_user
-import os
+import os # Importar o módulo 'os' para manipulação de caminhos
 import json
 
 from . import main
@@ -10,9 +10,8 @@ from .forms import AnalyticsStudioForm
 from app.models import Client, DataSource
 from app.zabbix_api import ZabbixService, ZabbixServiceError
 from app.collectors import AVAILABLE_COLLECTORS
-from app.report_generator import ReportGenerator # Importe o gerador
+from app.report_generator import ReportGenerator
 
-# ... (as rotas index, client_dashboard, e analytics_studio permanecem as mesmas) ...
 @main.route('/')
 @main.route('/index')
 @login_required
@@ -51,17 +50,15 @@ def analytics_studio():
         form.host_groups.choices = []
     return render_template('main/analytics_studio.html', title='Analytics Studio', form=form, client=client)
 
-# --- NOVA ROTA PARA GERAR O RELATÓRIO ---
 @main.route('/generate-report', methods=['POST'])
 @login_required
 def generate_report():
     client_id = session.get('selected_client_id')
     client = Client.query.get_or_404(client_id)
     
-    # Extrai as configurações do formulário enviado
     report_config = {
         'report_name': request.form.get('report_name'),
-        'modules': request.form.getlist('modules'), # Pega os checkboxes dos módulos
+        'modules': request.form.getlist('modules'),
         'hosts': request.form.getlist('hosts'),
         'start_date': request.form.get('start_date'),
         'end_date': request.form.get('end_date'),
@@ -73,11 +70,15 @@ def generate_report():
 
     try:
         generator = ReportGenerator(client, report_config)
-        pdf_path = generator.generate()
+        relative_pdf_path = generator.generate()
         
-        if pdf_path:
-            # Envia o ficheiro PDF gerado para o utilizador fazer o download
-            return send_file(pdf_path, as_attachment=True, download_name=os.path.basename(pdf_path))
+        if relative_pdf_path:
+            # --- CORREÇÃO APLICADA AQUI ---
+            # Convertemos o caminho relativo para um caminho absoluto
+            absolute_pdf_path = os.path.abspath(relative_pdf_path)
+            
+            # Enviamos o caminho absoluto para o Flask, garantindo que ele o encontre
+            return send_file(absolute_pdf_path, as_attachment=True)
         else:
             flash('Não foi possível gerar o relatório. Verifique se há dados para os parâmetros selecionados.', 'warning')
             return redirect(url_for('main.analytics_studio'))
@@ -87,55 +88,35 @@ def generate_report():
         current_app.logger.error(f"Erro na geração do relatório: {e}", exc_info=True)
         return redirect(url_for('main.analytics_studio'))
 
-# --- ROTAS DE API PARA O JAVASCRIPT ---
-
+# --- APIs (removi o debug para a versão final) ---
 @main.route('/api/get_hosts/<string:group_ids>')
 @login_required
 def get_hosts(group_ids):
-    print("\\n--- INICIANDO DEBUG: ROTA /api/get_hosts CHAMADA ---")
+    client_id = session.get('selected_client_id')
+    client = Client.query.get_or_404(client_id)
     try:
-        client_id = session.get('selected_client_id')
-        print(f"[DEBUG] ID do cliente na sessão: {client_id}")
-        client = Client.query.get_or_404(client_id)
-        print(f"[DEBUG] Cliente encontrado: {client.name}")
-        
-        print("[DEBUG] A procurar pela Fonte de Dados Zabbix...")
         zabbix_ds = client.data_sources.filter(DataSource.platform.ilike('Zabbix')).first()
-        
         if not zabbix_ds:
-            print("[DEBUG] ERRO: Nenhuma Fonte de Dados Zabbix encontrada para este cliente.")
             return jsonify({'error': 'Fonte de dados Zabbix não configurada.'}), 500
-        
-        print(f"[DEBUG] Fonte de Dados encontrada (ID: {zabbix_ds.id}). A tentar criar ZabbixService...")
+            
         zabbix = ZabbixService(zabbix_ds)
-        print("[DEBUG] ZabbixService criado com SUCESSO.")
-        
-        print(f"[DEBUG] A buscar hosts para os group_ids: {group_ids}")
         hosts = zabbix.get('host.get', {
             'output': ['hostid', 'name'],
             'groupids': group_ids.split(','),
             'sortfield': 'name'
         })
-        print(f"[DEBUG] Hosts encontrados: {hosts}")
-        print("--- FIM DO DEBUG ---")
         return jsonify([{'id': h['hostid'], 'name': h['name']} for h in hosts])
-        
-    except Exception as e:
-        print(f"[DEBUG] ERRO CATASTRÓFICO NA ROTA get_hosts: {e}")
-        # Loga o erro completo no terminal para nós
-        current_app.logger.error(f"Erro na API get_hosts: {e}", exc_info=True)
-        print("--- FIM DO DEBUG COM ERRO ---")
+    except ZabbixServiceError as e:
         return jsonify({'error': str(e)}), 500
-
 
 @main.route('/api/validate_modules', methods=['POST'])
 @login_required
 def validate_modules():
-    # ... (código existente, sem debug por enquanto) ...
     client_id = session.get('selected_client_id')
     client = Client.query.get_or_404(client_id)
     host_ids = request.json.get('host_ids', [])
     if not host_ids: return jsonify({'supported_modules': []})
+    
     platform_services, supported_modules = {}, []
     try:
         for key, data in AVAILABLE_COLLECTORS.items():
@@ -146,10 +127,12 @@ def validate_modules():
                 if ds:
                     if required_platform.lower() == 'zabbix':
                         platform_services[required_platform] = ZabbixService(ds)
+            
             if required_platform in platform_services:
                 service_instance = platform_services[required_platform]
                 if collector_class.is_supported(service_instance, host_ids):
                     supported_modules.append({'key': key, 'name': data['name']})
+        
         return jsonify({'supported_modules': supported_modules})
     except Exception as e:
         current_app.logger.error(f"Erro ao validar módulos: {e}", exc_info=True)

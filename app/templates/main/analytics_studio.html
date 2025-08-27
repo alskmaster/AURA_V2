@@ -9,7 +9,7 @@
         </a>
     </div>
 
-    <form method="POST" action="#"> {# A ação será definida na próxima fase #}
+    <form method="POST" action="{{ url_for('main.generate_report') }}">
         {{ form.hidden_tag() }}
         
         <div class="row g-4">
