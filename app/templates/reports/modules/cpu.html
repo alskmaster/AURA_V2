@@ -1,71 +1,37 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <style>
-        /* Estilos gerais que serão aplicados no PDF */
-        body { font-family: sans-serif; color: #333; }
-        h2 { color: #1a237e; border-bottom: 2px solid #e0e0e0; padding-bottom: 5px; }
-        h3 { color: #3f51b5; margin-top: 30px; }
-        p { line-height: 1.6; }
-        
-        /* NOVO: Estilo para a caixa de insights */
-        .insights-box {
-            background-color: #f4f6f9;
-            border-left: 5px solid #1a237e;
-            padding: 15px;
-            margin-top: 20px;
-            margin-bottom: 20px;
-        }
-        .insights-box h3 {
-            margin-top: 0;
-            color: #1a237e;
-        }
-        .insights-box ul {
-            padding-left: 20px;
-            margin-bottom: 0;
-        }
-        .insights-box li {
-            margin-bottom: 10px;
-            line-height: 1.5;
-        }
+{% extends "reports/base.html" %}
 
-        /* Estilos para a tabela gerada pelo Pandas */
-        .table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        .table th, .table td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-        .table th { background-color: #3f51b5; color: white; font-weight: bold; }
-    </style>
-</head>
-<body>
-    <div style="page-break-inside: avoid;">
-        <h2>{{ custom_title }}</h2>
-        
-        {% if insights %}
-        <div class="insights-box">
-            <h3>Insights Automáticos</h3>
-            <ul>
-                {% for insight in insights %}
-                <li>{{ insight }}</li>
-                {% endfor %}
-            </ul>
-        </div>
-        {% endif %}
-        
-        <h3>Visualização Gráfica</h3>
-        <p>O gráfico abaixo representa visualmente os dados analisados para o período especificado.</p>
-        {% if chart_path %}
-        <div style="text-align: center; padding: 20px 0;">
-            <img src="{{ chart_path }}" alt="Gráfico de Análise" style="max-width: 100%; height: auto;">
-        </div>
-        {% endif %}
-        
-        <h3>Dados Detalhados</h3>
-        <p>A tabela abaixo apresenta os dados numéricos correspondentes à análise.</p>
-        {% if table_html %}
-        <div>
-            {{ table_html|safe }}
-        </div>
-        {% endif %}
+{% block content %}
+{# Adiciona a classe de quebra de página se a opção 'new_page' for verdadeira #}
+<div class="{% if new_page %}new-page-start{% endif %}">
+    
+    <h2>{{ custom_title }}</h2>
+    
+    {% if insights %}
+    <div class="insights-box">
+        <h3>Insights Automáticos</h3>
+        <ul>
+            {% for insight in insights %}
+            <li>{{ insight }}</li>
+            {% endfor %}
+        </ul>
     </div>
-</body>
-</html>
+    {% endif %}
+    
+    <h3>Visualização Gráfica</h3>
+    <p>O gráfico abaixo representa visualmente os dados analisados para o período especificado.</p>
+    {% if chart_path %}
+    <div style="text-align: center; padding: 20px 0; page-break-inside: avoid;">
+        <img src="{{ chart_path }}" alt="Gráfico de Análise" style="max-width: 100%; height: auto;">
+    </div>
+    {% endif %}
+    
+    <h3>Dados Detalhados</h3>
+    <p>A tabela abaixo apresenta os dados numéricos correspondentes à análise.</p>
+    {% if table_html %}
+    <div>
+        {{ table_html|safe }}
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}

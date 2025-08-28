@@ -5,7 +5,8 @@
     <style>
         @page {
             size: a4 portrait;
-            margin: 2.5cm 1.5cm; /* Mais margem no topo e fundo */
+            margin: 2.5cm 1.5cm; /* Margens para o conteúdo principal */
+            
             @frame header {
                 -pdf-frame-content: page-header;
                 top: 1cm;
@@ -13,6 +14,7 @@
                 right: 1.5cm;
                 height: 1.5cm;
             }
+            
             @frame footer {
                 -pdf-frame-content: page-footer;
                 bottom: 1cm;
@@ -21,14 +23,42 @@
                 height: 1cm;
             }
         }
+
+        .new-page-start {
+            page-break-before: always;
+        }
+
         body { font-family: sans-serif; color: #333333; }
-        h2, h3 { color: #1a237e; border-bottom: 2px solid #e0e0e0; padding-bottom: 5px; margin-top: 25px; }
+        h2 { 
+            color: #1a237e; /* Azul Escuro */
+            border-bottom: 2px solid #e0e0e0; 
+            padding-bottom: 5px; 
+            margin-top: 25px; 
+        }
+        h3 { 
+            color: #3f51b5; /* Azul Médio */
+            margin-top: 25px; 
+        }
         p { line-height: 1.6; }
-        .table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+
+        .table { width: 100%; border-collapse: collapse; margin-top: 20px; page-break-inside: avoid; }
         .table th, .table td { border: 1px solid #dddddd; padding: 10px; text-align: left; }
         .table th { background-color: #3f51b5; color: white; font-weight: bold; }
-        .insights-box { border: 1px solid #ffca28; background-color: #fff9c4; padding: 15px; margin-top: 20px; border-radius: 5px; }
-        .insights-box h3 { color: #c79100; border-bottom: none; margin-top: 0; font-size: 1.1em; }
+
+        .insights-box { 
+            border-left: 5px solid #1a237e;
+            background-color: #f4f6f9; 
+            padding: 15px; 
+            margin-top: 20px; 
+            border-radius: 5px; 
+            page-break-inside: avoid;
+        }
+        .insights-box h3 { 
+            color: #1a237e; 
+            border-bottom: none; 
+            margin-top: 0; 
+            font-size: 1.1em; 
+        }
         .insights-box ul { padding-left: 20px; margin-bottom: 0; }
         .insights-box li { margin-bottom: 10px; }
     </style>
@@ -49,7 +79,8 @@
         <table width="100%">
             <tr>
                 <td style="text-align: left; color: #888888;">Relatório Confidencial</td>
-                <td style="text-align: right; color: #888888;">Página <pdf:pagenumber /> de <pdf:pagecount /></td>
+                
+                <td style="text-align: right; color: #888888;">Página <pdf:pagenumber /></td>
             </tr>
         </table>
     </div>

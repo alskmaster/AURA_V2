@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        @page {
+            size: a4 portrait;
+            margin: 0; /* Remove margens para a capa */
+        }
+        body {
+            font-family: sans-serif;
+            color: #ffffff;
+            background-color: #1a237e; /* Cor de fundo azul escura */
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            height: 100vh;
+        }
+        .cover-container {
+            padding: 50px;
+        }
+        .logo {
+            font-size: 3em;
+            font-weight: bold;
+            color: #ffffff;
+            margin-bottom: 50px;
+            letter-spacing: 2px;
+        }
+        .report-title {
+            font-size: 2.5em;
+            margin-bottom: 20px;
+        }
+        .client-name {
+            font-size: 1.8em;
+            color: #c5cae9; /* Tom de azul mais claro */
+            margin-bottom: 50px;
+        }
+        .report-info {
+            font-size: 1.2em;
+        }
+        .report-info .label {
+            font-weight: bold;
+            color: #c5cae9;
+        }
+    </style>
+</head>
+<body>
+    <div class="cover-container">
+        <div class="logo">AURA 2.0</div>
+
+        <h1 class="report-title">{{ report_name }}</h1>
+        <h2 class="client-name">{{ client_name }}</h2>
+
+        <div class="report-info">
+            <span class="label">Período de Análise:</span><br>
+            {{ start_date }} a {{ end_date }}
+        </div>
+    </div>
+</body>
+</html>
