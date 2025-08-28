@@ -4,8 +4,10 @@
 {# Adiciona a classe de quebra de página se a opção 'new_page' for verdadeira #}
 <div class="{% if new_page %}new-page-start{% endif %}">
     
+    {# O título principal do módulo é sempre exibido #}
     <h2>{{ custom_title }}</h2>
     
+    {# CONDIÇÃO 1: Só mostra a secção de insights se existirem insights para mostrar #}
     {% if insights %}
     <div class="insights-box">
         <h3>Insights Automáticos</h3>
@@ -17,17 +19,19 @@
     </div>
     {% endif %}
     
+    {# CONDIÇÃO 2: Só mostra a secção do gráfico se um gráfico foi gerado #}
+    {% if chart_path %}
     <h3>Visualização Gráfica</h3>
     <p>O gráfico abaixo representa visualmente os dados analisados para o período especificado.</p>
-    {% if chart_path %}
     <div style="text-align: center; padding: 20px 0; page-break-inside: avoid;">
         <img src="{{ chart_path }}" alt="Gráfico de Análise" style="max-width: 100%; height: auto;">
     </div>
     {% endif %}
     
+    {# CONDIÇÃO 3: Só mostra a secção da tabela se uma tabela foi gerada #}
+    {% if table_html %}
     <h3>Dados Detalhados</h3>
     <p>A tabela abaixo apresenta os dados numéricos correspondentes à análise.</p>
-    {% if table_html %}
     <div>
         {{ table_html|safe }}
     </div>

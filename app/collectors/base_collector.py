@@ -1,4 +1,4 @@
-# ==== AURA_V2/app/collectors/base_collector.py (VERSÃO CORRIGIDA E COMPLETA) ====
+# ==== AURA_V2/app/collectors/base_collector.py (VERSÃO ROBUSTA COM CHUNKING) ====
 
 from abc import ABC, abstractmethod
 import time
@@ -23,9 +23,6 @@ class BaseCollector(ABC):
             self.start_time = None
             self.end_time = None
 
-    # CORREÇÃO: O método 'collect' agora é o método principal e abstrato.
-    # A lógica de try/except foi movida para o ReportGenerator, que é um local mais
-    # apropriado para tratar erros de execução de um coletor.
     @abstractmethod
     def collect(self, instance_config=None):
         """
@@ -44,14 +41,12 @@ class BaseCollector(ABC):
         pass
 
     # --- FUNÇÕES DE AJUDA ---
-    # Estas funções continuam a ser úteis para todos os coletores filhos.
     def _get_items_by_key(self, key_pattern, host_ids=None):
         """Função de ajuda para buscar itens com base num padrão de chave."""
         active_host_ids = host_ids if host_ids is not None else self.host_ids
         if not active_host_ids:
             return []
         
-        # DEBUG: Adicionado para ver que itens estão a ser pesquisados
         print(f"[DEBUG] BaseCollector._get_items_by_key: Buscando itens com o padrão '{key_pattern}' para {len(active_host_ids)} hosts.")
         
         return self.service.get('item.get', {
@@ -61,20 +56,46 @@ class BaseCollector(ABC):
             'searchByAny': True
         })
 
-    def _get_history(self, item_ids, history_type):
-        """Função de ajuda para buscar o histórico de itens."""
+    def _get_history(self, item_ids, history_type, chunk_size=5):
+        """
+        Função de ajuda para buscar o histórico de itens, agora com 'chunking'
+        para evitar sobrecarregar a API do Zabbix.
+        """
         if not self.start_time or not self.end_time:
             raise ValueError("Período (data de início/fim) não foi definido para buscar o histórico.")
         
-        # DEBUG: Adicionado para ver que histórico está a ser solicitado
-        print(f"[DEBUG] BaseCollector._get_history: Buscando histórico para {len(item_ids)} itens do tipo {history_type}.")
+        if not item_ids:
+            return []
+
+        all_history = []
+        # Divide a lista de item_ids em lotes (chunks)
+        item_chunks = [item_ids[i:i + chunk_size] for i in range(0, len(item_ids), chunk_size)]
         
-        return self.service.get('history.get', {
-            'output': 'extend',
-            'history': history_type,
-            'itemids': item_ids,
-            'time_from': self.start_time,
-            'time_till': self.end_time,
-            'sortfield': 'clock',
-            'sortorder': 'ASC'
-        })
+        print(f"[DEBUG] BaseCollector._get_history: A lista de {len(item_ids)} itens foi dividida em {len(item_chunks)} lotes de até {chunk_size} itens cada.")
+
+        for i, chunk in enumerate(item_chunks):
+            print(f"[DEBUG] BaseCollector._get_history: Buscando histórico para o lote {i + 1}/{len(item_chunks)}...")
+            try:
+                history_chunk = self.service.get('history.get', {
+                    'output': 'extend',
+                    'history': history_type,
+                    'itemids': chunk,
+                    'time_from': self.start_time,
+                    'time_till': self.end_time,
+                    'sortfield': 'clock',
+                    'sortorder': 'ASC'
+                })
+                if history_chunk:
+                    all_history.extend(history_chunk)
+                    print(f"[DEBUG] BaseCollector._get_history: Lote {i + 1} retornou {len(history_chunk)} registos.")
+                else:
+                    print(f"[DEBUG] BaseCollector._get_history: Lote {i + 1} não retornou dados.")
+                # Pausa opcional para ser ainda mais "gentil" com a API
+                time.sleep(0.1) 
+            except Exception as e:
+                print(f"[ERRO] BaseCollector._get_history: Falha ao buscar o lote {i + 1}. Erro: {e}")
+                # Decide se quer parar ou continuar em caso de erro. Continuar é mais resiliente.
+                continue
+        
+        print(f"[DEBUG] BaseCollector._get_history: Coleta de histórico finalizada. Total de {len(all_history)} registos obtidos.")
+        return all_history

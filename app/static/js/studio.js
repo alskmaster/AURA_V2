@@ -1,4 +1,4 @@
-// ==== AURA_V2/app/static/js/studio.js (VERSÃO FINAL COM TODAS AS FUNCIONALIDADES) ====
+// ==== AURA_V2/app/static/js/studio.js (VERSÃO COM PERSONALIZAÇÃO DE COMPONENTES) ====
 
 document.addEventListener('DOMContentLoaded', function () {
     // --- 1. Seletores de Elementos ---
@@ -56,7 +56,6 @@ document.addEventListener('DOMContentLoaded', function () {
         modalTitle.textContent = `Configurar: ${currentTitle}`;
         modalFormContent.innerHTML = '';
 
-        // Formulário base com Título e a nova opção de Quebra de Página
         let baseFormHtml = `
             <div class="mb-3">
                 <label for="config-title" class="form-label">Título da Análise</label>
@@ -85,20 +84,30 @@ document.addEventListener('DOMContentLoaded', function () {
             moduleSpecificFormHtml = '<p>Este módulo não possui configurações de análise personalizáveis.</p>';
         }
 
-        // Adiciona a opção de nova página para TODOS os módulos
+        // NOVO: Adiciona opções para mostrar/ocultar componentes
         let layoutOptionsHtml = `
             <hr>
+            <h6>Opções de Layout</h6>
             <div class="form-check">
-                <input class="form-check-input" type="checkbox" value="" id="config-newPage" ${currentConfig.newPage ? 'checked' : ''}>
-                <label class="form-check-label" for="config-newPage">
-                    Iniciar este módulo numa nova página
-                </label>
+                <input class="form-check-input" type="checkbox" id="config-showInsights" ${currentConfig.showInsights ? 'checked' : ''}>
+                <label class="form-check-label" for="config-showInsights">Exibir Insights Automáticos</label>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="config-showChart" ${currentConfig.showChart ? 'checked' : ''}>
+                <label class="form-check-label" for="config-showChart">Exibir Visualização Gráfica</label>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="config-showTable" ${currentConfig.showTable ? 'checked' : ''}>
+                <label class="form-check-label" for="config-showTable">Exibir Tabela de Dados</label>
+            </div>
+            <div class="form-check mt-2">
+                <input class="form-check-input" type="checkbox" id="config-newPage" ${currentConfig.newPage ? 'checked' : ''}>
+                <label class="form-check-label" for="config-newPage">Iniciar este módulo numa nova página</label>
             </div>
         `;
         
         modalFormContent.innerHTML = baseFormHtml + moduleSpecificFormHtml + layoutOptionsHtml;
 
-        // Adiciona lógica JS específica do módulo, se houver
         if (moduleType === 'cpu') {
             modalFormContent.querySelector('#config-analysis').addEventListener('change', (e) => {
                 document.getElementById('top-n-container').style.display = e.target.value === 'top_n' ? 'block' : 'none';
@@ -118,8 +127,15 @@ document.addEventListener('DOMContentLoaded', function () {
         li.className = 'list-group-item d-flex justify-content-between align-items-center';
         li.dataset.moduleKey = key;
         li.dataset.instanceId = instanceId;
-        // Configuração padrão inicial
-        li.dataset.config = JSON.stringify({ analysis: 'average', newPage: false });
+        
+        // NOVO: Configuração padrão inicial com as novas opções de visibilidade
+        li.dataset.config = JSON.stringify({
+            analysis: 'average',
+            newPage: false,
+            showInsights: true,
+            showChart: true,
+            showTable: true
+        });
 
         li.innerHTML = `
             <div>
@@ -158,9 +174,8 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     // --- 5. Funções de API e Sincronização ---
-    // (As funções fetchHosts, handleHostSelectionChange, validateModules e initializeStudio não precisam de alterações)
-    
     async function fetchHosts() {
+        // ... (código existente, sem alterações)
         console.log('[DEBUG] fetchHosts: Buscando hosts...');
         const selectedGroupIds = Array.from(hostGroupsSelect.selectedOptions).map(o => o.value);
         hostsContainer.innerHTML = '<div class="text-center p-3"><span class="spinner-border spinner-border-sm"></span> A carregar hosts...</div>';
@@ -194,6 +209,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
     
     async function handleHostSelectionChange() {
+        // ... (código existente, sem alterações)
         console.log('[DEBUG] handleHostSelectionChange: Seleção de host alterada.');
         const selectedHostIds = Array.from(hostsContainer.querySelectorAll('.host-checkbox:checked')).map(cb => cb.value);
         Array.from(hostsSelect.options).forEach(opt => opt.selected = false);
@@ -206,6 +222,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
     
     async function validateModules() {
+        // ... (código existente, sem alterações)
         console.log('[DEBUG] validateModules: Validando módulos compatíveis...');
         const selectedHostIds = Array.from(hostsContainer.querySelectorAll('.host-checkbox:checked')).map(cb => cb.value);
         if (selectedHostIds.length === 0) {
@@ -236,6 +253,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
     
     async function initializeStudio() {
+        // ... (código existente, sem alterações)
         console.log('[DEBUG] initializeStudio: Iniciando o Analytics Studio.');
         try {
             const response = await fetch('/api/get_all_modules');
@@ -267,24 +285,26 @@ document.addEventListener('DOMContentLoaded', function () {
     saveConfigBtn.addEventListener('click', () => {
         const instanceItem = reportLayoutList.querySelector(`[data-instance-id="${currentEditingInstanceId}"]`);
         if (instanceItem) {
-            const newTitle = modalFormContent.querySelector('#config-title').value;
-            instanceItem.querySelector('.module-title').textContent = newTitle;
+            instanceItem.querySelector('.module-title').textContent = modalFormContent.querySelector('#config-title').value;
 
             // Começa com a configuração que já existia
             let newConfig = JSON.parse(instanceItem.dataset.config);
             
-            // Atualiza com os novos valores do formulário
+            // Atualiza com os valores do formulário de análise (se existir)
             const analysisSelect = modalFormContent.querySelector('#config-analysis');
             if(analysisSelect) {
                 newConfig.analysis = analysisSelect.value;
                 if (newConfig.analysis === 'top_n') {
                     newConfig.value = modalFormContent.querySelector('#config-top-n-value').value;
                 } else {
-                    delete newConfig.value; // Remove a chave 'value' se não for 'top_n'
+                    delete newConfig.value;
                 }
             }
             
-            // Adiciona a nova opção de quebra de página
+            // NOVO: Lê e guarda o estado dos checkboxes de visibilidade
+            newConfig.showInsights = modalFormContent.querySelector('#config-showInsights').checked;
+            newConfig.showChart = modalFormContent.querySelector('#config-showChart').checked;
+            newConfig.showTable = modalFormContent.querySelector('#config-showTable').checked;
             newConfig.newPage = modalFormContent.querySelector('#config-newPage').checked;
             
             console.log('[DEBUG] saveConfigBtn: Nova configuração a ser guardada:', newConfig);

@@ -1,4 +1,4 @@
-# ==== AURA_V2/app/pdf_builder.py (VERSÃO MODIFICADA E COMPLETA) ====
+# ==== AURA_V2/app/pdf_builder.py (VERSÃO COM CONTAGEM DE PÁGINAS) ====
 
 import os
 import uuid
@@ -34,24 +34,45 @@ class PDFBuilderService:
         if pisa_status.err:
             raise IOError(f"Erro ao converter HTML para PDF no template {template_name}: {pisa_status.err}")
         
-        print(f"[DEBUG] PDFBuilder: Template '{template_name}' convertido para PDF em '{temp_filename}'.")
+        # print(f"[DEBUG] PDFBuilder: Template '{template_name}' convertido para PDF em '{temp_filename}'.") # Removido para reduzir o ruído no log
         return temp_filename
 
-    # NOVO: Método dedicado para criar a página de capa.
     def build_cover_page(self, context):
         """Renderiza e cria o PDF da página de capa."""
         print("[DEBUG] PDFBuilder: A construir a página de capa.")
         return self.html_to_pdf_path('reports/cover_page.html', context)
+
+    # NOVO: Método que apenas junta e conta as páginas, sem guardar o ficheiro.
+    def count_merged_pages(self, pdf_paths, cover_page_path=None):
+        """Junta uma lista de PDFs em memória para contar o número total de páginas."""
+        total_pages = 0
         
-    # MODIFICADO: Agora aceita um caminho para a capa.
+        if cover_page_path:
+            try:
+                cover_reader = PdfReader(cover_page_path)
+                num_pages = len(cover_reader.pages)
+                print(f"[DEBUG] PDFBuilder(Count): A capa tem {num_pages} página(s).")
+                total_pages += num_pages
+            except Exception as e:
+                print(f"Erro ao contar páginas da capa {cover_page_path}: {e}")
+
+        for path in pdf_paths:
+            try:
+                pdf_reader = PdfReader(path)
+                num_pages = len(pdf_reader.pages)
+                print(f"[DEBUG] PDFBuilder(Count): Ficheiro '{os.path.basename(path)}' tem {num_pages} página(s).")
+                total_pages += num_pages
+            except Exception as e:
+                print(f"Erro ao contar páginas do ficheiro {path}: {e}")
+        
+        return total_pages
+
     def merge_pdfs(self, pdf_paths, output_filename='relatorio_final.pdf', cover_page_path=None):
         """Junta uma lista de ficheiros PDF num único ficheiro de saída, adicionando uma capa se fornecida."""
         pdf_writer = PdfWriter()
-        temp_files_to_clean = list(pdf_paths) # Copia a lista para limpeza
+        temp_files_to_clean = list(pdf_paths)
 
-        # Adiciona a capa primeiro, se existir.
         if cover_page_path:
-            print(f"[DEBUG] PDFBuilder: A adicionar a capa '{cover_page_path}' ao relatório final.")
             try:
                 cover_reader = PdfReader(cover_page_path)
                 for page in cover_reader.pages:
@@ -60,8 +81,6 @@ class PDFBuilderService:
             except Exception as e:
                 print(f"Erro ao processar a capa do PDF {cover_page_path}: {e}")
 
-        # Adiciona as páginas dos módulos.
-        print(f"[DEBUG] PDFBuilder: A juntar {len(pdf_paths)} páginas de módulos.")
         for path in pdf_paths:
             try:
                 pdf_reader = PdfReader(path)
