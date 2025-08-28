@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        @page {
+            size: a4 portrait;
+            margin: 2.5cm 1.5cm; /* Mais margem no topo e fundo */
+            @frame header {
+                -pdf-frame-content: page-header;
+                top: 1cm;
+                left: 1.5cm;
+                right: 1.5cm;
+                height: 1.5cm;
+            }
+            @frame footer {
+                -pdf-frame-content: page-footer;
+                bottom: 1cm;
+                left: 1.5cm;
+                right: 1.5cm;
+                height: 1cm;
+            }
+        }
+        body { font-family: sans-serif; color: #333333; }
+        h2, h3 { color: #1a237e; border-bottom: 2px solid #e0e0e0; padding-bottom: 5px; margin-top: 25px; }
+        p { line-height: 1.6; }
+        .table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        .table th, .table td { border: 1px solid #dddddd; padding: 10px; text-align: left; }
+        .table th { background-color: #3f51b5; color: white; font-weight: bold; }
+        .insights-box { border: 1px solid #ffca28; background-color: #fff9c4; padding: 15px; margin-top: 20px; border-radius: 5px; }
+        .insights-box h3 { color: #c79100; border-bottom: none; margin-top: 0; font-size: 1.1em; }
+        .insights-box ul { padding-left: 20px; margin-bottom: 0; }
+        .insights-box li { margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+    <div id="page-header">
+        <table width="100%">
+            <tr>
+                <td style="text-align: left; color: #4f46e5; font-weight: bold; font-size: 1.2em;">AURA 2.0</td>
+                <td style="text-align: right; color: #555555;">{{ report_name }} | {{ client_name }}</td>
+            </tr>
+        </table>
+        <hr style="border-top: 1px solid #ccc;">
+    </div>
+
+    <div id="page-footer">
+        <hr style="border-top: 1px solid #ccc;">
+        <table width="100%">
+            <tr>
+                <td style="text-align: left; color: #888888;">Relatório Confidencial</td>
+                <td style="text-align: right; color: #888888;">Página <pdf:pagenumber /> de <pdf:pagecount /></td>
+            </tr>
+        </table>
+    </div>
+
+    {% block content %}{% endblock %}
+</body>
+</html>

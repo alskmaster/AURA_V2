@@ -1,7 +1,8 @@
-# ==== AURA_V2/app/main/routes.py (VERSÃO FINAL COM CUSTOMIZAÇÃO) ====
+# ==== AURA_V2/app/main/routes.py (VERSÃO FINAL E CORRIGIDA) ====
+
 from flask import render_template, redirect, url_for, session, flash, jsonify, request, current_app, send_file
 from flask_login import login_required, current_user
-import os
+import os # Importar o módulo 'os' para manipulação de caminhos
 import json
 
 from . import main
@@ -11,7 +12,6 @@ from app.zabbix_api import ZabbixService, ZabbixServiceError
 from app.collectors import AVAILABLE_COLLECTORS
 from app.report_generator import ReportGenerator
 
-# ... (outras rotas permanecem iguais) ...
 @main.route('/')
 @main.route('/index')
 @login_required
@@ -43,24 +43,22 @@ def analytics_studio():
             host_groups = zabbix.get('hostgroup.get', {'output': ['groupid', 'name']})
             sorted_groups = sorted(host_groups, key=lambda x: x['name'])
             form.host_groups.choices = [(g['groupid'], g['name']) for g in sorted_groups]
+        else:
+            flash("Nenhuma Fonte de Dados Zabbix encontrada para carregar os grupos de hosts.", 'warning')
     except ZabbixServiceError as e:
         flash(f'Erro ao carregar grupos de hosts do Zabbix: {e}', 'danger')
         form.host_groups.choices = []
     return render_template('main/analytics_studio.html', title='Analytics Studio', form=form, client=client)
 
-# --- ROTA DE GERAÇÃO DE RELATÓRIO ATUALIZADA ---
 @main.route('/generate-report', methods=['POST'])
 @login_required
 def generate_report():
     client_id = session.get('selected_client_id')
     client = Client.query.get_or_404(client_id)
     
-    # Decodifica a configuração complexa do layout a partir do JSON enviado pelo formulário
-    layout_config = json.loads(request.form.get('report_layout_order', '[]'))
-
     report_config = {
         'report_name': request.form.get('report_name'),
-        'modules': layout_config, # A configuração dos módulos agora é a estrutura completa
+        'modules': json.loads(request.form.get('report_layout_order', '[]')),
         'hosts': request.form.getlist('hosts'),
         'start_date': request.form.get('start_date'),
         'end_date': request.form.get('end_date'),
@@ -75,7 +73,11 @@ def generate_report():
         relative_pdf_path = generator.generate()
         
         if relative_pdf_path:
+            # --- CORREÇÃO APLICADA AQUI ---
+            # Convertemos o caminho relativo para um caminho absoluto
             absolute_pdf_path = os.path.abspath(relative_pdf_path)
+            
+            # Enviamos o caminho absoluto para o Flask, garantindo que ele o encontre
             return send_file(absolute_pdf_path, as_attachment=True)
         else:
             flash('Não foi possível gerar o relatório. Verifique se há dados para os parâmetros selecionados.', 'warning')
@@ -86,7 +88,7 @@ def generate_report():
         current_app.logger.error(f"Erro na geração do relatório: {e}", exc_info=True)
         return redirect(url_for('main.analytics_studio'))
 
-# ... (APIs permanecem iguais) ...
+# --- APIs (removi o debug para a versão final) ---
 @main.route('/api/get_all_modules')
 @login_required
 def get_all_modules():
@@ -100,9 +102,15 @@ def get_hosts(group_ids):
     client = Client.query.get_or_404(client_id)
     try:
         zabbix_ds = client.data_sources.filter(DataSource.platform.ilike('Zabbix')).first()
-        if not zabbix_ds: return jsonify({'error': 'Fonte de dados Zabbix não configurada.'}), 500
+        if not zabbix_ds:
+            return jsonify({'error': 'Fonte de dados Zabbix não configurada.'}), 500
+            
         zabbix = ZabbixService(zabbix_ds)
-        hosts = zabbix.get('host.get', {'output': ['hostid', 'name'], 'groupids': group_ids.split(','), 'sortfield': 'name'})
+        hosts = zabbix.get('host.get', {
+            'output': ['hostid', 'name'],
+            'groupids': group_ids.split(','),
+            'sortfield': 'name'
+        })
         return jsonify([{'id': h['hostid'], 'name': h['name']} for h in hosts])
     except ZabbixServiceError as e:
         return jsonify({'error': str(e)}), 500
@@ -114,6 +122,7 @@ def validate_modules():
     client = Client.query.get_or_404(client_id)
     host_ids = request.json.get('host_ids', [])
     if not host_ids: return jsonify({'supported_modules': []})
+    
     platform_services, supported_modules = {}, []
     try:
         for key, data in AVAILABLE_COLLECTORS.items():
@@ -124,10 +133,12 @@ def validate_modules():
                 if ds:
                     if required_platform.lower() == 'zabbix':
                         platform_services[required_platform] = ZabbixService(ds)
+            
             if required_platform in platform_services:
                 service_instance = platform_services[required_platform]
                 if collector_class.is_supported(service_instance, host_ids):
                     supported_modules.append({'key': key, 'name': data['name']})
+        
         return jsonify({'supported_modules': supported_modules})
     except Exception as e:
         current_app.logger.error(f"Erro ao validar módulos: {e}", exc_info=True)
