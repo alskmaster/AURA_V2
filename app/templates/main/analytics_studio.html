@@ -1,6 +1,46 @@
 {% extends "base.html" %}
 
 {% block app_content %}
+<style>
+    /* Estilos para os cartões de módulo */
+    .module-card {
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        padding: 15px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.2s ease-in-out;
+        background-color: #fff;
+    }
+    .module-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        border-color: #0d6efd;
+    }
+    .module-card.disabled {
+        cursor: not-allowed;
+        background-color: #f8f9fa;
+        opacity: 0.6;
+    }
+    .module-card .icon {
+        font-size: 2rem;
+        color: #0d6efd;
+        margin-bottom: 10px;
+    }
+    .module-card.disabled .icon {
+        color: #6c757d;
+    }
+    
+    /* Estilos para os itens no layout do relatório */
+    #report-layout .list-group-item {
+        border-radius: 8px;
+        margin-bottom: 10px;
+    }
+    .drag-handle {
+        cursor: grab;
+    }
+</style>
+
 <div class="container-fluid">
     <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
         <h1 class="h2">Analytics Studio: {{ client.name }}</h1>
@@ -9,7 +49,7 @@
         </a>
     </div>
 
-    <form method="POST" action="{{ url_for('main.generate_report') }}">
+    <form method="POST" action="{{ url_for('main.generate_report') }}" id="report-form">
         {{ form.hidden_tag() }}
         
         <div class="row g-4">
@@ -59,18 +99,19 @@
         <div class="row mt-4">
             <div class="col-12">
                 <div class="card shadow-sm">
-                    <div class="card-header"><h5 class="mb-0">3. Módulos do Relatório</h5></div>
+                    <div class="card-header"><h5 class="mb-0">3. Construtor do Relatório</h5></div>
                     <div class="card-body">
                         <p class="text-muted" id="modules-helper-text">Selecione os hosts acima para ver e escolher os módulos de análise.</p>
                         
-                        <div id="available-modules-container" class="row g-3">
-                        </div>
+                        <h6>Módulos Disponíveis</h6>
+                        <div id="available-modules-container" class="row g-3 mb-4 p-3 bg-light border rounded">
+                            </div>
 
                         <hr class="my-4">
 
                         <h6>Layout Final do Relatório (arraste para ordenar)</h6>
-                        <ul id="report-layout" class="list-group" style="min-height: 100px; background-color: #f8f9fa;">
-                        </ul>
+                        <ul id="report-layout" class="list-group" style="min-height: 100px;">
+                            </ul>
                         <input type="hidden" name="report_layout_order" id="report_layout_order">
                     </div>
                 </div>
@@ -84,6 +125,7 @@
         </div>
     </form>
 </div>
+
 <div class="modal fade" id="moduleConfigModal" tabindex="-1" aria-labelledby="moduleConfigModalLabel" aria-hidden="true">
   <div class="modal-dialog">
     <div class="modal-content">
@@ -92,7 +134,6 @@
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
-        <p>As opções de configuração para este módulo aparecerão aqui.</p>
         <div id="modal-form-content"></div>
       </div>
       <div class="modal-footer">
@@ -102,8 +143,8 @@
     </div>
   </div>
 </div>
+
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
 <script src="{{ url_for('static', filename='js/studio.js') }}"></script>
-<script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 {% endblock %}

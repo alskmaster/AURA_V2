@@ -1,4 +1,4 @@
-# ==== AURA_V2/app/report_generator.py (VERSÃO FINAL COM CUSTOMIZAÇÃO) ====
+# ==== AURA_V2/app/report_generator.py (VERSÃO MODIFICADA E COMPLETA) ====
 
 import uuid
 import os
@@ -18,18 +18,22 @@ class ReportGenerator:
         self.pdf_builder = PDFBuilderService()
         self.platform_services = {}
 
+        # Inicializa os serviços de plataforma necessários (ex: Zabbix)
         for ds in self.client.data_sources:
             platform_name = ds.platform.capitalize()
             if platform_name == 'Zabbix':
-                try: self.platform_services[platform_name] = ZabbixService(ds)
-                except Exception as e: print(f"Falha ao inicializar serviço Zabbix: {e}")
+                try:
+                    self.platform_services[platform_name] = ZabbixService(ds)
+                except Exception as e:
+                    # Usar o logger da aplicação é uma prática melhor do que print
+                    current_app.logger.error(f"Falha ao inicializar serviço Zabbix para o cliente {self.client.name}: {e}")
 
     def generate(self):
-        """Executa o processo de geração do relatório."""
+        """Executa o processo de geração do relatório, iterando sobre as instâncias de módulos configuradas."""
         pdf_parts_paths = []
         has_data = False
 
-        # Itera sobre a lista de instâncias de módulos configuradas pelo utilizador
+        # Itera sobre a lista de instâncias de módulos configuradas pelo utilizador no layout
         for module_instance in self.config.get('modules', []):
             module_key = module_instance.get('type')
             
@@ -39,8 +43,10 @@ class ReportGenerator:
                 platform_service = self.platform_services.get(required_platform)
 
                 if platform_service:
-                    # Passa a configuração específica da instância para o coletor
+                    # Instancia o coletor, passando os serviços e a configuração geral
                     collector = CollectorClass(platform_service, self.charting, self.config)
+                    
+                    # Chama o método 'collect', passando a configuração específica desta instância
                     module_context = collector.collect(instance_config=module_instance)
                     
                     if module_context:
@@ -52,10 +58,12 @@ class ReportGenerator:
                         temp_pdf_path = self.pdf_builder.html_to_pdf_path(template_path, module_context)
                         pdf_parts_paths.append(temp_pdf_path)
         
+        # Se nenhum coletor retornou dados, limpa os ficheiros temporários e retorna None
         if not has_data:
             self.pdf_builder._cleanup(pdf_parts_paths)
             return None
 
+        # Monta o nome do ficheiro final e junta os PDFs
         report_name = self.config.get('report_name', 'Relatorio').replace(' ', '_')
         final_pdf_path = self.pdf_builder.merge_pdfs(
             pdf_paths=pdf_parts_paths,

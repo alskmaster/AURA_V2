@@ -1,8 +1,8 @@
-# ==== AURA_V2/app/main/routes.py (VERSÃO FINAL E CORRIGIDA) ====
+# ==== AURA_V2/app/main/routes.py (VERSÃO MODIFICADA E COMPLETA) ====
 
 from flask import render_template, redirect, url_for, session, flash, jsonify, request, current_app, send_file
 from flask_login import login_required, current_user
-import os # Importar o módulo 'os' para manipulação de caminhos
+import os
 import json
 
 from . import main
@@ -56,9 +56,12 @@ def generate_report():
     client_id = session.get('selected_client_id')
     client = Client.query.get_or_404(client_id)
     
+    # MODIFICADO: Lê a configuração do layout a partir do campo JSON
+    layout_order_json = request.form.get('report_layout_order', '[]')
+    
     report_config = {
         'report_name': request.form.get('report_name'),
-        'modules': json.loads(request.form.get('report_layout_order', '[]')),
+        'modules': json.loads(layout_order_json), # Transforma a string JSON em objeto Python
         'hosts': request.form.getlist('hosts'),
         'start_date': request.form.get('start_date'),
         'end_date': request.form.get('end_date'),
@@ -73,25 +76,23 @@ def generate_report():
         relative_pdf_path = generator.generate()
         
         if relative_pdf_path:
-            # --- CORREÇÃO APLICADA AQUI ---
-            # Convertemos o caminho relativo para um caminho absoluto
             absolute_pdf_path = os.path.abspath(relative_pdf_path)
-            
-            # Enviamos o caminho absoluto para o Flask, garantindo que ele o encontre
             return send_file(absolute_pdf_path, as_attachment=True)
         else:
             flash('Não foi possível gerar o relatório. Verifique se há dados para os parâmetros selecionados.', 'warning')
             return redirect(url_for('main.analytics_studio'))
             
     except Exception as e:
-        flash(f'Ocorreu um erro inesperado ao gerar o relatório: {e}', 'danger')
         current_app.logger.error(f"Erro na geração do relatório: {e}", exc_info=True)
+        flash(f'Ocorreu um erro inesperado ao gerar o relatório: {e}', 'danger')
         return redirect(url_for('main.analytics_studio'))
 
-# --- APIs (removi o debug para a versão final) ---
+# --- APIs ---
+
 @main.route('/api/get_all_modules')
 @login_required
 def get_all_modules():
+    """NOVO: Retorna uma lista de todos os módulos disponíveis no sistema."""
     all_modules = [{'key': key, 'name': data['name']} for key, data in AVAILABLE_COLLECTORS.items()]
     return jsonify({'all_modules': all_modules})
 

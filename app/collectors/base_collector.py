@@ -1,4 +1,4 @@
-# ==== AURA_V2/app/collectors/base_collector.py (VERSÃO FINAL E COMPLETA) ====
+# ==== AURA_V2/app/collectors/base_collector.py (VERSÃO CORRIGIDA E COMPLETA) ====
 
 from abc import ABC, abstractmethod
 import time
@@ -23,31 +23,37 @@ class BaseCollector(ABC):
             self.start_time = None
             self.end_time = None
 
+    # CORREÇÃO: O método 'collect' agora é o método principal e abstrato.
+    # A lógica de try/except foi movida para o ReportGenerator, que é um local mais
+    # apropriado para tratar erros de execução de um coletor.
+    @abstractmethod
     def collect(self, instance_config=None):
-        try:
-            # Passa a configuração da instância para o fetch_data
-            data = self.fetch_data(instance_config)
-            if data is None: return None
-            return data
-        except Exception as e:
-            print(f"Erro ao coletar dados para {self.__class__.__name__}: {e}")
-            return None
+        """
+        Método abstrato que cada coletor filho DEVE implementar.
+        Ele recebe a configuração específica da sua instância no relatório.
+        """
+        pass
 
     @classmethod
     @abstractmethod
     def is_supported(cls, platform_service, host_ids):
+        """
+        Método abstrato para verificar se o coletor é compatível
+        com os hosts selecionados.
+        """
         pass
 
-    @abstractmethod
-    def fetch_data(self, instance_config):
-        pass
-
-    # --- FUNÇÕES DE AJUDA RESTAURADAS ---
+    # --- FUNÇÕES DE AJUDA ---
+    # Estas funções continuam a ser úteis para todos os coletores filhos.
     def _get_items_by_key(self, key_pattern, host_ids=None):
         """Função de ajuda para buscar itens com base num padrão de chave."""
         active_host_ids = host_ids if host_ids is not None else self.host_ids
         if not active_host_ids:
             return []
+        
+        # DEBUG: Adicionado para ver que itens estão a ser pesquisados
+        print(f"[DEBUG] BaseCollector._get_items_by_key: Buscando itens com o padrão '{key_pattern}' para {len(active_host_ids)} hosts.")
+        
         return self.service.get('item.get', {
             'output': ['itemid', 'name', 'hostid'],
             'hostids': active_host_ids,
@@ -59,6 +65,10 @@ class BaseCollector(ABC):
         """Função de ajuda para buscar o histórico de itens."""
         if not self.start_time or not self.end_time:
             raise ValueError("Período (data de início/fim) não foi definido para buscar o histórico.")
+        
+        # DEBUG: Adicionado para ver que histórico está a ser solicitado
+        print(f"[DEBUG] BaseCollector._get_history: Buscando histórico para {len(item_ids)} itens do tipo {history_type}.")
+        
         return self.service.get('history.get', {
             'output': 'extend',
             'history': history_type,
